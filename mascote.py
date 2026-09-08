@@ -589,6 +589,23 @@ class Pet(QWidget):
     def paint_yorkshire(self, p, happy):
         # Silky tan and gray coat, pointed ears and beard from yorkshire.png.
         outline = QPen(QColor('#514238'), 2.5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
+        def lock(x, y, width, length, angle, color):
+            """A tapered, curved lock instead of individual noisy hair strokes."""
+            p.save()
+            p.translate(x, y)
+            p.rotate(angle)
+            p.setPen(Qt.NoPen)
+            shade = QColor(color)
+            shade.setAlpha(185)
+            p.setBrush(shade)
+            shape = QPainterPath(QPointF(0, 0))
+            shape.cubicTo(-width * .7, length * .2, width * .25, length * .8, -width * .2, length)
+            shape.cubicTo(width * .65, length * .7, width * .5, length * .25, 0, 0)
+            shape.closeSubpath()
+            p.drawPath(shape)
+            p.restore()
+
         p.setPen(outline)
         p.setBrush(QColor('#64636a'))
         p.save()
@@ -603,8 +620,14 @@ class Pet(QWidget):
         p.drawPath(tail)
         p.setPen(QPen(QColor('#dba25d'), 5, Qt.SolidLine, Qt.RoundCap))
         p.drawArc(QRectF(9, -19, 23, 30), -90 * 16, 120 * 16)
+        for args in ((22, -24, 9, 24, -22, '#909096'), (27, -15, 8, 25, -32, '#edba78'),
+                     (17, -7, 8, 23, -55, '#b68150')):
+            lock(*args)
         p.restore()
         p.drawEllipse(QRectF(44, 128, 88, 83))
+        for args in ((117, 139, 13, 37, -18, '#85858a'), (125, 154, 11, 35, -20, '#48484f'),
+                     (111, 157, 12, 33, 4, '#a09a91'), (122, 179, 12, 28, -28, '#d49a5c')):
+            lock(*args)
         p.setBrush(QColor('#edba78'))
         p.drawEllipse(QRectF(101, 185, 34, 29))
         chest = QPainterPath(QPointF(62, 136))
@@ -620,8 +643,15 @@ class Pet(QWidget):
         chest.lineTo(56, 165)
         chest.closeSubpath()
         p.drawPath(chest)
+        for args in ((72, 143, 12, 31, -12, '#ffd49a'), (88, 139, 13, 41, 15, '#c88d51'),
+                     (90, 143, 9, 31, 13, '#f8cf95'), (70, 161, 11, 24, 5, '#d49a5c'),
+                     (96, 155, 9, 27, -12, '#ffe0ab')):
+            lock(*args)
         for x in (49, 88):
             p.drawRoundedRect(QRectF(x, 169, 33, 48), 12, 12)
+            for dx, y, angle, color in ((8, 170, 9, '#d59958'), (19, 168, -8, '#ffda9e'),
+                                        (8, 186, 16, '#f8ce92'), (23, 184, -12, '#ca8c4e')):
+                lock(x + dx, y, 9, 25, angle, color)
             for offset in (10, 21):
                 p.drawLine(QPointF(x + offset, 207), QPointF(x + offset, 214))
         p.setBrush(QColor('#64636a'))
@@ -649,6 +679,10 @@ class Pet(QWidget):
         p.setPen(outline)
         p.setBrush(QColor('#64636a'))
         p.drawEllipse(QRectF(25, 58, 123, 98))
+        for args in ((41, 71, 13, 43, 12, '#89868a'), (30, 92, 12, 43, -5, '#55545b'),
+                     (138, 85, 13, 45, -9, '#4c4b52'), (131, 65, 12, 32, -29, '#99918a'),
+                     (71, 62, 12, 24, -25, '#a39a90'), (100, 62, 12, 27, 22, '#89858a')):
+            lock(*args)
         p.setBrush(QColor('#edba78'))
         face = QPainterPath(QPointF(83, 88))
         face.cubicTo(62, 60, 35, 77, 34, 108)
@@ -662,6 +696,14 @@ class Pet(QWidget):
         face.lineTo(87, 69)
         face.closeSubpath()
         p.drawPath(face)
+        # Layered fringe and cheek locks follow the center part of the reference.
+        for args in ((74, 77, 12, 27, 35, '#ffd49a'), (58, 79, 10, 25, 24, '#c48a4f'),
+                     (48, 85, 10, 31, 17, '#f8cc90'), (39, 104, 11, 36, -7, '#d39a5e'),
+                     (40, 119, 10, 31, 6, '#ffda9e'), (100, 77, 12, 27, -35, '#ffdaa0'),
+                     (116, 80, 10, 25, -24, '#c48a4f'), (129, 89, 10, 31, -15, '#f8cc90'),
+                     (135, 107, 11, 34, 7, '#d39a5e'), (131, 123, 10, 29, -10, '#ffdaa0'),
+                     (83, 59, 9, 26, -18, '#a89b89'), (91, 59, 8, 23, 15, '#d4ac7c')):
+            lock(*args)
         p.setPen(QPen(QColor('#d99c60'), 2, Qt.SolidLine, Qt.RoundCap))
         for x in (48, 61, 109, 122):
             p.drawArc(QRectF(x - 8, 77, 20, 31), 35 * 16, 100 * 16)
@@ -695,6 +737,10 @@ class Pet(QWidget):
         beard.lineTo(127, 140)
         beard.cubicTo(124, 120, 103, 116, 86, 124)
         p.drawPath(beard)
+        for args in ((61, 128, 10, 24, 19, '#d3995e'), (69, 127, 9, 29, 10, '#ffe0ac'),
+                     (78, 146, 8, 13, -9, '#d4995a'), (102, 128, 9, 27, -15, '#d3995e'),
+                     (113, 127, 9, 24, -21, '#ffe0ac'), (98, 145, 8, 13, 10, '#edba78')):
+            lock(*args)
         p.setBrush(Qt.NoBrush)
         p.drawArc(QRectF(73, 129, 28, 14), 180 * 16, 180 * 16)
         if not self.sleeping:
