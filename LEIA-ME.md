@@ -1,22 +1,71 @@
 # Clips — Mascote do PC
 
-Abra “Clips — Mascote do PC” pelo menu de aplicativos.
+O Clips é um mascote de desktop feito em Python e PyQt5. Ele acompanha o mouse, reage aos cliques, cochila depois de um período sem atividade e pode ser arrastado pela tela.
 
-- Os olhos acompanham o mouse.
-- Cliques provocam pequenos pulos.
-- Após 35 segundos sem movimento ou clique do mouse, ele cochila.
-- Arraste o mascote com o botão esquerdo.
-- Clique com o botão direito e use “Trocar bichinho” para escolher entre Pretí (gato preto), Marla (golden), Panda, Papagaio e Clippy. A escolha fica salva para a próxima abertura.
-- Pretí é o mascote inicial e também acompanha o mouse, pisca, pula e cochila.
-- O mesmo menu permite esconder, pausar, iniciar com o computador ou sair.
-- O ícone na bandeja permite mostrar o mascote novamente.
+Os mascotes disponíveis são Clippy, Pretí (gato preto), Marla (golden), Mochi (panda), Louro José (papagaio) e Zoe (Yorkshire). Para trocar de mascote, clique com o botão direito no personagem e abra **Trocar bichinho**. A escolha fica salva para a próxima abertura.
 
-Funciona localmente em Linux/X11 e Windows com PyQt5. Não lê teclas, não captura telas e não usa internet. Cliques muito rápidos podem não ser detectados, pois o mouse é consultado a cada 33 ms. A inicialização automática fica desativada até você marcar a opção no menu; no Linux ela usa o autostart do usuário e no Windows a pasta de inicialização do usuário.
+## Linux
 
-As imagens em `referencias-mascotes/` são os modelos de base.
+O Linux precisa estar em uma sessão gráfica X11. O programa consulta o cursor por meio do X11; em uma sessão Wayland, entre em uma sessão “Xorg” ou “X11” antes de iniciar.
 
-Marla tem orelhas caídas, pelagem dourada e cauda que abana. Ela também acompanha o mouse, pisca, pula e cochila.
+1. Instale o Python 3 e o suporte a ambientes virtuais. No Ubuntu ou Debian:
 
-O Panda segue a imagem-base, com orelhas redondas, manchas pretas e almofadinhas nas patas. Também acompanha o mouse, pisca, pula e cochila.
+   ```bash
+   sudo apt update
+   sudo apt install python3 python3-venv
+   ```
 
-O Papagaio segue a imagem-base, atualizada em `referencias-mascotes/papagaio-referencia-atual.png`, com penas verde-escuras e amarelas, bico grande alaranjado, pés laranja e olhar semicerrado. Acompanha o mouse, pisca, cochila e movimenta as asas ao reagir aos cliques.
+   Em outras distribuições, instale os pacotes equivalentes de Python 3, `pip` e `venv` pelo gerenciador de pacotes da distribuição.
+
+2. Abra um terminal na pasta do projeto e crie um ambiente virtual:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   python -m pip install --upgrade pip PyQt5
+   ```
+
+3. Inicie o mascote:
+
+   ```bash
+   python mascote.py
+   ```
+
+   Deixe o terminal aberto enquanto o mascote estiver sendo executado. Para encerrar pelo terminal, pressione `Ctrl+C`. Também é possível usar **botão direito → Sair**.
+
+## Windows
+
+1. Instale o Python 3 pelo [site oficial do Python](https://www.python.org/downloads/windows/). Durante a instalação, marque **Add Python to PATH**.
+
+2. Abra o PowerShell na pasta do projeto e crie um ambiente virtual:
+
+   ```powershell
+   py -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   python -m pip install --upgrade pip PyQt5
+   ```
+
+   Se o PowerShell bloquear a ativação do ambiente, execute uma vez:
+
+   ```powershell
+   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   ```
+
+   Depois, repita o comando de ativação.
+
+3. Inicie o mascote:
+
+   ```powershell
+   python mascote.py
+   ```
+
+   Para encerrar, use **botão direito → Sair**. Se quiser executar sem manter uma janela do terminal aberta, use `pythonw mascote.py`.
+
+## Controles
+
+- Botão esquerdo: arrasta o mascote.
+- Botão direito: abre as opções, troca o bichinho, pausa reações, esconde o personagem ou encerra o programa.
+- **Iniciar com o computador**: cria a configuração de inicialização automática para o usuário atual. A opção pode ser desmarcada no mesmo menu.
+- O ícone na bandeja do sistema permite mostrar o mascote novamente depois de escondê-lo.
+
+As imagens em `referencias-mascotes/` são os modelos de base. O programa funciona localmente, não lê teclas, não captura telas e não usa internet.
