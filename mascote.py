@@ -115,13 +115,13 @@ class Pet(QWidget):
         self.message_until = time.monotonic() + 7
         self.settings = QSettings('MascoteDoPC', 'Mascotes')
         self.character = self.settings.value('bichinho', 'gato-preto')
-        if self.character not in ('clippy', 'gato-preto'):
+        if self.character not in ('clippy', 'gato-preto', 'golden'):
             self.character = 'gato-preto'
         self.menu = QMenu()
         choices = self.menu.addMenu('Trocar bichinho')
         self.character_actions = QActionGroup(self)
         self.character_actions.setExclusive(True)
-        for key, label in [('clippy', 'Clippy'), ('gato-preto', 'Gato preto')]:
+        for key, label in [('clippy', 'Clippy'), ('gato-preto', 'Pretí'), ('golden', 'Marla')]:
             action = choices.addAction(label)
             action.setCheckable(True)
             action.setData(key)
@@ -265,6 +265,119 @@ class Pet(QWidget):
             p.drawLine(QPointF(45, y), QPointF(15, y + offset))
             p.drawLine(QPointF(126, y), QPointF(157, y + offset))
 
+    def paint_golden(self, p, happy):
+        # Honey fur, floppy ears and a fluffy chest from the golden reference.
+        outline = QPen(QColor('#79502d'), 2.7, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        p.setPen(outline)
+        p.setBrush(QColor('#efb855'))
+        p.save()
+        p.translate(121, 191)
+        p.rotate(0 if self.sleeping else math.sin(self.t * (12 if happy else 3)) * 9)
+        tail = QPainterPath(QPointF(0, 12))
+        tail.cubicTo(36, 16, 51, -19, 34, -48)
+        tail.quadTo(36, -30, 26, -26)
+        tail.lineTo(28, -38)
+        tail.cubicTo(15, -21, 24, -7, 0, -6)
+        tail.closeSubpath()
+        p.drawPath(tail)
+        p.restore()
+        p.drawEllipse(QRectF(42, 128, 91, 86))
+        p.setBrush(QColor('#ffda87'))
+        chest = QPainterPath(QPointF(59, 139))
+        chest.quadTo(86, 125, 112, 140)
+        chest.lineTo(110, 161)
+        chest.lineTo(104, 158)
+        chest.lineTo(102, 180)
+        chest.lineTo(95, 175)
+        chest.lineTo(86, 190)
+        chest.lineTo(76, 177)
+        chest.lineTo(70, 181)
+        chest.lineTo(68, 162)
+        chest.lineTo(60, 166)
+        chest.closeSubpath()
+        p.setPen(Qt.NoPen)
+        p.drawPath(chest)
+        p.setPen(outline)
+        p.setBrush(QColor('#f4c36c'))
+        for x in (39, 103):
+            p.drawEllipse(QRectF(x, 190, 33, 26))
+        for x in (57, 88):
+            p.drawRoundedRect(QRectF(x, 171, 31, 47), 12, 12)
+            for offset in (10, 20):
+                p.drawLine(QPointF(x + offset, 208), QPointF(x + offset, 215))
+        p.setBrush(QColor('#f7c76e'))
+        p.drawEllipse(QRectF(32, 47, 111, 105))
+        # Soft hanging ears frame the face.
+        for mirror in (False, True):
+            p.save()
+            if mirror:
+                p.translate(175, 0)
+                p.scale(-1, 1)
+            ear = QPainterPath(QPointF(49, 58))
+            ear.cubicTo(24, 54, 13, 79, 18, 106)
+            ear.cubicTo(19, 120, 22, 135, 31, 135)
+            ear.cubicTo(47, 131, 47, 98, 52, 79)
+            ear.quadTo(57, 61, 49, 58)
+            p.setBrush(QColor('#dda04a'))
+            p.drawPath(ear)
+            p.setPen(QPen(QColor('#efbb60'), 5, Qt.SolidLine, Qt.RoundCap))
+            p.drawArc(QRectF(23, 71, 19, 51), 100 * 16, 100 * 16)
+            p.restore()
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor('#ffdb8c'))
+        tuft = QPainterPath(QPointF(63, 57))
+        tuft.quadTo(71, 43, 84, 45)
+        tuft.lineTo(79, 50)
+        tuft.quadTo(94, 39, 109, 53)
+        tuft.quadTo(89, 49, 80, 62)
+        tuft.closeSubpath()
+        p.drawPath(tuft)
+        cursor = self.mapFromGlobal(QCursor.pos())
+        for ex in (63, 112):
+            p.setPen(QPen(QColor('#ad7637'), 3, Qt.SolidLine, Qt.RoundCap))
+            p.drawArc(QRectF(ex - 11, 73, 21, 12), 25 * 16, 135 * 16)
+            if self.sleeping or self.t % 4.7 < .12:
+                p.setPen(outline)
+                p.drawArc(QRectF(ex - 12, 94, 24, 13), 180 * 16, 180 * 16)
+            else:
+                p.setPen(Qt.NoPen)
+                p.setBrush(QColor('#fff7e5'))
+                p.drawEllipse(QRectF(ex - 13, 87, 26, 32))
+                dx, dy = cursor.x() - ex, cursor.y() - 103
+                distance = max(math.hypot(dx, dy), 1)
+                px, py = ex + dx / distance * 3, 103 + dy / distance * 3
+                p.setBrush(QColor('#694125'))
+                p.drawEllipse(QPointF(px, py), 10.5, 14)
+                p.setBrush(QColor('#35241d'))
+                p.drawEllipse(QPointF(px, py), 7, 11)
+                p.setBrush(Qt.white)
+                p.drawEllipse(QPointF(px - 3, py - 5), 3, 3.5)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor('#ffdc92'))
+        p.drawEllipse(QRectF(55, 110, 65, 33))
+        p.setPen(outline)
+        if self.sleeping:
+            p.setBrush(Qt.NoBrush)
+            p.drawArc(QRectF(73, 124, 28, 13), 180 * 16, 180 * 16)
+        else:
+            p.setBrush(QColor('#65382b'))
+            smile = QPainterPath(QPointF(67, 128))
+            smile.quadTo(87, 143, 109, 128)
+            smile.quadTo(89, 162 if happy else 154, 67, 128)
+            p.drawPath(smile)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor('#ef9290'))
+            p.drawRoundedRect(QRectF(81, 137, 16, 16 if happy else 12), 6, 6)
+        p.setPen(outline)
+        p.setBrush(QColor('#65412d'))
+        nose = QPainterPath(QPointF(77, 116))
+        nose.cubicTo(75, 110, 99, 110, 98, 117)
+        nose.quadTo(88, 132, 77, 116)
+        p.drawPath(nose)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor('#a77550'))
+        p.drawEllipse(QRectF(80, 113, 8, 4))
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -276,6 +389,8 @@ class Pet(QWidget):
         p.translate(0, bounce)
         if self.character == 'gato-preto':
             self.paint_cat(p, happy)
+        elif self.character == 'golden':
+            self.paint_golden(p, happy)
         else:
             wire = QPainterPath(QPointF(120, 118))
             wire.cubicTo(112, 141, 123, 195, 96, 205)
