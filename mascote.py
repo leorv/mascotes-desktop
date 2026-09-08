@@ -115,13 +115,13 @@ class Pet(QWidget):
         self.message_until = time.monotonic() + 7
         self.settings = QSettings('MascoteDoPC', 'Mascotes')
         self.character = self.settings.value('bichinho', 'gato-preto')
-        if self.character not in ('clippy', 'gato-preto', 'golden'):
+        if self.character not in ('clippy', 'gato-preto', 'golden', 'panda'):
             self.character = 'gato-preto'
         self.menu = QMenu()
         choices = self.menu.addMenu('Trocar bichinho')
         self.character_actions = QActionGroup(self)
         self.character_actions.setExclusive(True)
-        for key, label in [('clippy', 'Clippy'), ('gato-preto', 'Pretí'), ('golden', 'Marla')]:
+        for key, label in [('clippy', 'Clippy'), ('gato-preto', 'Pretí'), ('golden', 'Marla'), ('panda', 'Panda')]:
             action = choices.addAction(label)
             action.setCheckable(True)
             action.setData(key)
@@ -378,6 +378,107 @@ class Pet(QWidget):
         p.setBrush(QColor('#a77550'))
         p.drawEllipse(QRectF(80, 113, 8, 4))
 
+    def paint_panda(self, p, happy):
+        # Round ears, tilted eye patches and visible paw pads from the panda reference.
+        outline = QPen(QColor('#242326'), 2.7, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        p.setPen(outline)
+        p.setBrush(QColor('#faf6ed'))
+        p.drawEllipse(QRectF(25, 166, 31, 33))
+        p.drawEllipse(QRectF(44, 127, 91, 84))
+        p.setBrush(QColor('#303034'))
+        p.drawEllipse(QRectF(47, 133, 84, 46))
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor('#faf6ed'))
+        p.drawEllipse(QRectF(66, 144, 49, 62))
+        p.setPen(outline)
+        p.setBrush(QColor('#303034'))
+        for x, angle in ((63, -16), (117, 16)):
+            p.save()
+            p.translate(x, 173)
+            p.rotate(angle)
+            p.drawEllipse(QRectF(-14, -30, 28, 66))
+            p.restore()
+        for x, angle in ((45, -23), (133, 23)):
+            p.save()
+            p.translate(x, 191)
+            p.rotate(angle)
+            p.setPen(outline)
+            p.setBrush(QColor('#303034'))
+            p.drawEllipse(QRectF(-23, -27, 46, 55))
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor('#80756f'))
+            p.drawEllipse(QRectF(-11, -1, 22, 24))
+            for tx, ty in ((-12, -12), (0, -17), (12, -12)):
+                p.drawEllipse(QPointF(tx, ty), 4, 5)
+            p.restore()
+        p.setPen(outline)
+        p.setBrush(QColor('#303034'))
+        for x in (39, 133):
+            p.drawEllipse(QPointF(x, 58), 24, 26)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor('#414044'))
+            p.drawEllipse(QPointF(x, 58), 14, 17)
+            p.setPen(outline)
+            p.setBrush(QColor('#303034'))
+        p.setBrush(QColor('#faf6ed'))
+        head = QPainterPath(QPointF(26, 100))
+        head.cubicTo(26, 65, 53, 49, 81, 51)
+        head.lineTo(91, 44)
+        head.lineTo(91, 50)
+        head.cubicTo(123, 49, 151, 73, 151, 106)
+        head.cubicTo(155, 139, 130, 155, 90, 156)
+        head.cubicTo(49, 156, 22, 140, 26, 100)
+        p.drawPath(head)
+        cursor = self.mapFromGlobal(QCursor.pos())
+        for ex, angle in ((60, 24), (116, -24)):
+            p.save()
+            p.translate(ex, 105)
+            p.rotate(angle)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor('#303034'))
+            p.drawEllipse(QRectF(-19, -27, 38, 53))
+            p.restore()
+            if self.sleeping or self.t % 4.7 < .12:
+                p.setPen(QPen(QColor('#eee6dc'), 2.5, Qt.SolidLine, Qt.RoundCap))
+                p.drawArc(QRectF(ex - 10, 100, 20, 12), 180 * 16, 180 * 16)
+            else:
+                p.setPen(Qt.NoPen)
+                p.setBrush(QColor('#fffaf0'))
+                p.drawEllipse(QRectF(ex - 12, 93, 24, 30))
+                dx, dy = cursor.x() - ex, cursor.y() - 108
+                distance = max(math.hypot(dx, dy), 1)
+                px, py = ex + dx / distance * 2.5, 108 + dy / distance * 2.5
+                p.setBrush(QColor('#392f2a'))
+                p.drawEllipse(QPointF(px, py), 10, 13)
+                p.setBrush(QColor('#19191c'))
+                p.drawEllipse(QPointF(px, py), 7, 10)
+                p.setBrush(Qt.white)
+                p.drawEllipse(QPointF(px - 3, py - 5), 3.2, 3.7)
+            p.setPen(QPen(QColor('#303034'), 3, Qt.SolidLine, Qt.RoundCap))
+            p.drawArc(QRectF(ex - 9, 70, 18, 11), 25 * 16, 130 * 16)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor('#e8e0d7'))
+        p.drawEllipse(QRectF(75, 117, 28, 17))
+        p.setPen(outline)
+        p.setBrush(QColor('#303034'))
+        nose = QPainterPath(QPointF(80, 122))
+        nose.cubicTo(75, 117, 99, 117, 98, 122)
+        nose.quadTo(89, 134, 80, 122)
+        p.drawPath(nose)
+        p.drawLine(QPointF(89, 129), QPointF(89, 134))
+        p.setBrush(Qt.NoBrush)
+        if self.sleeping:
+            p.drawArc(QRectF(78, 130, 22, 11), 180 * 16, 180 * 16)
+        else:
+            p.setBrush(QColor('#633d3b'))
+            mouth = QPainterPath(QPointF(77, 134))
+            mouth.quadTo(89, 141, 102, 133)
+            mouth.quadTo(91, 158 if happy else 151, 77, 134)
+            p.drawPath(mouth)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor('#ed9c9c'))
+            p.drawEllipse(QRectF(85, 139, 12, 8 if happy else 5))
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -391,6 +492,8 @@ class Pet(QWidget):
             self.paint_cat(p, happy)
         elif self.character == 'golden':
             self.paint_golden(p, happy)
+        elif self.character == 'panda':
+            self.paint_panda(p, happy)
         else:
             wire = QPainterPath(QPointF(120, 118))
             wire.cubicTo(112, 141, 123, 195, 96, 205)
