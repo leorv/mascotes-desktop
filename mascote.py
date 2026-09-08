@@ -12,9 +12,9 @@ import os
 from pathlib import Path
 import sys
 import time
-from PyQt5.QtCore import Qt, QTimer, QPointF, QRectF, QLockFile, QStandardPaths
+from PyQt5.QtCore import Qt, QTimer, QPointF, QRectF, QLockFile, QStandardPaths, QSettings
 from PyQt5.QtGui import QColor, QPainter, QPainterPath, QPen, QCursor, QIcon, QFont
-from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QSystemTrayIcon
+from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QSystemTrayIcon, QActionGroup
 
 BASE = Path(__file__).resolve().parent
 IS_WINDOWS = os.name == 'nt'
@@ -113,7 +113,22 @@ class Pet(QWidget):
         self.sleeping = False
         self.t = 0
         self.message_until = time.monotonic() + 7
+        self.settings = QSettings('MascoteDoPC', 'Mascotes')
+        self.character = self.settings.value('bichinho', 'gato-preto')
+        if self.character not in ('clippy', 'gato-preto'):
+            self.character = 'gato-preto'
         self.menu = QMenu()
+        choices = self.menu.addMenu('Trocar bichinho')
+        self.character_actions = QActionGroup(self)
+        self.character_actions.setExclusive(True)
+        for key, label in [('clippy', 'Clippy'), ('gato-preto', 'Gato preto')]:
+            action = choices.addAction(label)
+            action.setCheckable(True)
+            action.setData(key)
+            action.setChecked(key == self.character)
+            self.character_actions.addAction(action)
+        self.character_actions.triggered.connect(self.change_character)
+        self.menu.addSeparator()
         self.menu.addAction('Mostrar / esconder', self.toggle_visible)
         self.pause_action = self.menu.addAction('Pausar reações', self.toggle_pause)
         self.pause_action.setCheckable(True)
@@ -132,6 +147,11 @@ class Pet(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.tick)
         self.timer.start(33)
+    def change_character(self, action):
+        self.character = action.data()
+        self.settings.setValue('bichinho', self.character)
+        self.update()
+
     def toggle_visible(self):
         self.setVisible(not self.isVisible())
     def toggle_pause(self, checked):
@@ -169,6 +189,82 @@ class Pet(QWidget):
         screen = QApplication.screenAt(self.frameGeometry().center()) or QApplication.primaryScreen()
         r = screen.availableGeometry()
         self.move(max(r.left(), min(self.x(), r.right() - self.width() + 1)), max(r.top(), min(self.y(), r.bottom() - self.height() + 1)))
+    def paint_cat(self, p, happy):
+        # Rounded silhouette and golden eyes based on referencias-mascotes/gato-preto.png.
+        outline = QPen(QColor('#171719'), 3, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        p.setPen(QPen(QColor('#171719'), 22, Qt.SolidLine, Qt.RoundCap))
+        tail = QPainterPath(QPointF(119, 202))
+        tail.cubicTo(170, 205, 166, 144, 148, 151)
+        tail.cubicTo(139, 154, 143, 166, 148, 165)
+        p.drawPath(tail)
+        p.setPen(QPen(QColor('#303034'), 16, Qt.SolidLine, Qt.RoundCap))
+        p.drawPath(tail)
+        p.setPen(outline)
+        p.setBrush(QColor('#29292d'))
+        p.drawEllipse(QRectF(43, 128, 87, 87))
+        p.setBrush(QColor('#343438'))
+        p.drawEllipse(QRectF(62, 144, 45, 65))
+        for x in (49, 91):
+            p.setPen(outline)
+            p.setBrush(QColor('#29292d'))
+            p.drawRoundedRect(QRectF(x, 179, 33, 37), 13, 13)
+            p.drawLine(QPointF(x + 11, 204), QPointF(x + 11, 213))
+            p.drawLine(QPointF(x + 21, 204), QPointF(x + 21, 213))
+        ears = QPainterPath(QPointF(32, 96))
+        ears.lineTo(29, 39)
+        ears.quadTo(31, 29, 40, 38)
+        ears.lineTo(68, 66)
+        ears.lineTo(111, 65)
+        ears.lineTo(136, 37)
+        ears.quadTo(144, 30, 144, 42)
+        ears.lineTo(140, 100)
+        ears.closeSubpath()
+        p.drawPath(ears)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor('#e998a0'))
+        for points in (((37, 47), (40, 85), (60, 70)), ((136, 47), (116, 72), (136, 86))):
+            ear = QPainterPath(QPointF(*points[0]))
+            for point in points[1:]:
+                ear.lineTo(*point)
+            ear.closeSubpath()
+            p.drawPath(ear)
+        p.setPen(outline)
+        p.setBrush(QColor('#29292d'))
+        p.drawEllipse(QRectF(24, 62, 123, 97))
+        cursor = self.mapFromGlobal(QCursor.pos())
+        for ex in (58, 111):
+            if self.sleeping or self.t % 4.7 < .12:
+                p.setPen(QPen(QColor('#e6b64f'), 3, Qt.SolidLine, Qt.RoundCap))
+                p.drawArc(QRectF(ex - 15, 98, 30, 15), 180 * 16, 180 * 16)
+            else:
+                p.setPen(outline)
+                p.setBrush(QColor('#efbd4f'))
+                p.drawEllipse(QRectF(ex - 17, 87, 34, 41))
+                dx, dy = cursor.x() - ex, cursor.y() - 107
+                distance = max(math.hypot(dx, dy), 1)
+                px, py = ex + dx / distance * 5, 107 + dy / distance * 4
+                p.setPen(Qt.NoPen)
+                p.setBrush(QColor('#151518'))
+                p.drawEllipse(QPointF(px, py), 10, 16)
+                p.setBrush(Qt.white)
+                p.drawEllipse(QPointF(px - 3, py - 6), 3.5, 4)
+        p.setPen(outline)
+        p.setBrush(QColor('#151518'))
+        p.drawEllipse(QRectF(79, 123, 12, 7))
+        mouth = QPainterPath(QPointF(85, 130))
+        mouth.lineTo(85, 135)
+        mouth.cubicTo(79, 142, 73, 137, 73, 134)
+        p.setBrush(Qt.NoBrush)
+        p.drawPath(mouth)
+        p.drawArc(QRectF(85, 129, 13, 11), 180 * 16, 180 * 16)
+        if happy:
+            p.setBrush(QColor('#ed929c'))
+            p.drawRoundedRect(QRectF(81, 136, 10, 11), 4, 4)
+        p.setPen(QPen(QColor('#828187'), 1.2, Qt.SolidLine, Qt.RoundCap))
+        for y, offset in ((126, -4), (134, 3)):
+            p.drawLine(QPointF(45, y), QPointF(15, y + offset))
+            p.drawLine(QPointF(126, y), QPointF(157, y + offset))
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -178,37 +274,41 @@ class Pet(QWidget):
         p.setBrush(QColor(0, 0, 0, 28))
         p.drawEllipse(QRectF(39, 220, 105, 9))
         p.translate(0, bounce)
-        wire = QPainterPath(QPointF(120, 118))
-        wire.cubicTo(112, 141, 123, 195, 96, 205)
-        wire.cubicTo(36, 231, 43, 158, 46, 114)
-        wire.lineTo(56, 60)
-        wire.cubicTo(63, 19, 117, 23, 116, 65)
-        wire.lineTo(103, 151)
-        wire.cubicTo(97, 186, 65, 180, 69, 150)
-        wire.lineTo(75, 116)
-        for color, width in [('#44445f', 14), ('#aaa9c7', 10), ('#d9daec', 4)]:
-            p.setPen(QPen(QColor(color), width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            p.drawPath(wire)
-        cursor = self.mapFromGlobal(QCursor.pos())
-        blink = self.t % 4.7 < .12
-        for ex, ey in [(61, 86), (111, 99)]:
-            p.setPen(QPen(QColor('#77778e'), 1.5))
-            p.setBrush(QColor('#fcfcff'))
-            p.drawEllipse(QRectF(ex - 25, ey - 22, 50, 44))
-            p.setPen(QPen(QColor('#29283b'), 3, Qt.SolidLine, Qt.RoundCap))
-            if self.sleeping or blink:
-                p.drawArc(QRectF(ex - 13, ey - 6, 26, 13), 180 * 16, 180 * 16)
-            else:
-                dx, dy = cursor.x() - ex, cursor.y() - ey
-                distance = max(math.hypot(dx, dy), 1)
-                px, py = ex + dx / distance * 8, ey + dy / distance * 7
-                p.setPen(Qt.NoPen)
-                p.setBrush(QColor('#21212c'))
-                p.drawEllipse(QPointF(px, py), 11, 13 if not happy else 10)
-                p.setBrush(Qt.white)
-                p.drawEllipse(QPointF(px - 3, py - 4), 3.5, 3.5)
-            p.setPen(QPen(QColor('#333344'), 4, Qt.SolidLine, Qt.RoundCap))
-            p.drawArc(QRectF(ex - 22, ey - 37 - (5 if happy else 0), 42, 20), 30 * 16, 130 * 16)
+        if self.character == 'gato-preto':
+            self.paint_cat(p, happy)
+        else:
+            wire = QPainterPath(QPointF(120, 118))
+            wire.cubicTo(112, 141, 123, 195, 96, 205)
+            wire.cubicTo(36, 231, 43, 158, 46, 114)
+            wire.lineTo(56, 60)
+            wire.cubicTo(63, 19, 117, 23, 116, 65)
+            wire.lineTo(103, 151)
+            wire.cubicTo(97, 186, 65, 180, 69, 150)
+            wire.lineTo(75, 116)
+            p.setBrush(Qt.NoBrush)
+            for color, width in [('#44445f', 14), ('#aaa9c7', 10), ('#d9daec', 4)]:
+                p.setPen(QPen(QColor(color), width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                p.drawPath(wire)
+            cursor = self.mapFromGlobal(QCursor.pos())
+            blink = self.t % 4.7 < .12
+            for ex, ey in [(61, 86), (111, 99)]:
+                p.setPen(QPen(QColor('#77778e'), 1.5))
+                p.setBrush(QColor('#fcfcff'))
+                p.drawEllipse(QRectF(ex - 25, ey - 22, 50, 44))
+                p.setPen(QPen(QColor('#29283b'), 3, Qt.SolidLine, Qt.RoundCap))
+                if self.sleeping or blink:
+                    p.drawArc(QRectF(ex - 13, ey - 6, 26, 13), 180 * 16, 180 * 16)
+                else:
+                    dx, dy = cursor.x() - ex, cursor.y() - ey
+                    distance = max(math.hypot(dx, dy), 1)
+                    px, py = ex + dx / distance * 8, ey + dy / distance * 7
+                    p.setPen(Qt.NoPen)
+                    p.setBrush(QColor('#21212c'))
+                    p.drawEllipse(QPointF(px, py), 11, 13 if not happy else 10)
+                    p.setBrush(Qt.white)
+                    p.drawEllipse(QPointF(px - 3, py - 4), 3.5, 3.5)
+                p.setPen(QPen(QColor('#333344'), 4, Qt.SolidLine, Qt.RoundCap))
+                p.drawArc(QRectF(ex - 22, ey - 37 - (5 if happy else 0), 42, 20), 30 * 16, 130 * 16)
         p.setPen(QColor('#65617f'))
         p.setFont(QFont('Sans Serif', 13, QFont.Bold))
         if self.sleeping:
