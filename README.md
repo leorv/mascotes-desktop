@@ -1,7 +1,7 @@
 # 🐾 Clips — Mascote do PC
 
 <p align="center">
-  Um pequeno companheiro de desktop que acompanha o cursor, reage aos cliques e tira uma soneca quando o computador fica parado.
+  Um pequeno companheiro de desktop que reage aos cliques e tira uma soneca quando o computador fica parado.
 </p>
 
 <p align="center">
@@ -12,14 +12,14 @@
   <img src="referencias-mascotes/yorkshire.png" alt="Mascote Yorkshire" width="90">
 </p>
 
-O **Clips** é um mascote local feito em Python e PyQt5. Ele fica sobre as janelas, olha na direção do mouse, pode ser arrastado pela tela e oferece opções pela bandeja do sistema.
+O **Clips** é um mascote local feito em Python e PyQt5. Ele fica sobre as janelas, pode ser arrastado pela tela e oferece opções pela bandeja do sistema. Os personagens desenhados no programa acompanham o mouse com os olhos.
 
 > Projeto independente e offline: não lê teclas, não captura a tela e não usa a internet.
 
 ## ✨ Recursos
 
-- 🐱 Seis mascotes disponíveis: Clippy, Pretí, Marla, Mochi, Louro José e Zoe.
-- 🖱️ Acompanha o cursor e reage aos cliques.
+- 🐱 Oito mascotes disponíveis: Clippy, Pretí, Marla, Mochi, Louro José, Zoe, Mixo e Mixi.
+- 🖱️ Os personagens desenhados acompanham o cursor com os olhos; todos reagem aos cliques.
 - 😴 Entra em modo de descanso após 35 segundos sem movimento do mouse.
 - 🖐️ Pode ser arrastado para qualquer lugar da tela.
 - ⚙️ Salva o mascote escolhido para a próxima execução.
@@ -108,6 +108,7 @@ pythonw mascote.py
 | Botão direito | Abre o menu de opções |
 | Trocar bichinho | Escolhe outro mascote e salva a preferência |
 | Mostrar / esconder | Alterna a visibilidade do personagem |
+| Espelhar mascote | Vira o personagem para o outro lado; a escolha vale para todos e fica salva |
 | Pausar reações | Mantém o mascote parado |
 | Iniciar com o computador | Configura ou remove a inicialização automática |
 | Ícone na bandeja do sistema | Mostra o mascote novamente depois de escondê-lo |
@@ -123,8 +124,16 @@ pythonw mascote.py
 | Mochi | [`panda.png`](referencias-mascotes/panda.png) |
 | Louro José | [`papagaio.png`](referencias-mascotes/papagaio.png) |
 | Zoe | [`yorkshire.png`](referencias-mascotes/yorkshire.png) |
+| Mixo — e.mix | Desenhado diretamente no programa, inspirado no logo da e.mix |
+| Mixi — camaleão | [`mixi.png`](referencias-mascotes/mixi.png) |
 
-As imagens em `referencias-mascotes/` são referências visuais usadas na criação dos desenhos. O programa não precisa carregá-las para funcionar.
+O **Mixo** preserva o antigo mascote geométrico e suas reações. Quem já o tinha escolhido continua com ele após a atualização.
+
+O novo **Mixi** é o camaleão da e.mix. Selecione **Trocar bichinho → Mixi — camaleão** para vê-lo em três poses: normal, animado ao clicar e dormindo após 35 segundos sem atividade. Na pose normal, ele pisca e acompanha o mouse com os olhos. A escolha fica salva para a próxima execução.
+
+Ao usar **Espelhar mascote** com o Mixi, o programa usa versões voltadas para o outro lado para manter a escrita **e.Mix** legível no boné e no colete.
+
+As imagens em `referencias-mascotes/` são referências visuais. As três imagens em `assets/mixi/` são usadas pelo programa e devem acompanhar o arquivo `mascote.py`.
 
 ## 🛠️ Solução de problemas
 
@@ -164,10 +173,23 @@ O programa pode já estar em execução. Verifique a bandeja do sistema antes de
 
 ```text
 .
+├── assets/
+│   └── mixi/
+│       ├── animado.png
+│       ├── animado-espelhado.png
+│       ├── dormindo.png
+│       ├── dormindo-espelhado.png
+│       ├── normal.png
+│       ├── normal-espelhado.png
+│       ├── olhos-limpos.png
+│       ├── olhos-limpos-espelhado.png
+│       ├── piscando.png
+│       └── piscando-espelhado.png
 ├── mascote.py
 ├── referencias-mascotes/
 │   ├── cachorro-golden.png
 │   ├── gato-preto.png
+│   ├── mixi.png
 │   ├── panda.png
 │   ├── papagaio.png
 │   ├── prompts.md

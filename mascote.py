@@ -13,7 +13,7 @@ from pathlib import Path
 import sys
 import time
 from PyQt5.QtCore import Qt, QTimer, QPointF, QRectF, QLockFile, QStandardPaths, QSettings
-from PyQt5.QtGui import QColor, QPainter, QPainterPath, QPen, QCursor, QIcon, QFont
+from PyQt5.QtGui import QColor, QPainter, QPainterPath, QPen, QCursor, QIcon, QFont, QLinearGradient, QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QSystemTrayIcon, QActionGroup
 
 BASE = Path(__file__).resolve().parent
@@ -114,14 +114,29 @@ class Pet(QWidget):
         self.t = 0
         self.message_until = time.monotonic() + 7
         self.settings = QSettings('MascoteDoPC', 'Mascotes')
+        self.mirrored = self.settings.value('espelhar_mascote', False, type=bool)
         self.character = self.settings.value('bichinho', 'gato-preto')
-        if self.character not in ('clippy', 'gato-preto', 'golden', 'panda', 'papagaio', 'yorkshire'):
+        # The previous "mixi" selection referred to the geometric mascot.
+        if not self.settings.value('mixi_split_v1', False, type=bool):
+            if self.character == 'mixi':
+                self.character = 'mixo'
+                self.settings.setValue('bichinho', self.character)
+            self.settings.setValue('mixi_split_v1', True)
+        if self.character not in ('clippy', 'gato-preto', 'golden', 'panda', 'papagaio', 'yorkshire', 'mixo', 'mixi'):
             self.character = 'gato-preto'
+        self.mixi_poses = {
+            pose: QPixmap(str(BASE / 'assets' / 'mixi' / f'{pose}.png'))
+            for pose in (
+                'normal', 'animado', 'dormindo', 'olhos-limpos', 'piscando',
+                'normal-espelhado', 'animado-espelhado', 'dormindo-espelhado',
+                'olhos-limpos-espelhado', 'piscando-espelhado',
+            )
+        }
         self.menu = QMenu()
         choices = self.menu.addMenu('Trocar bichinho')
         self.character_actions = QActionGroup(self)
         self.character_actions.setExclusive(True)
-        for key, label in [('clippy', 'Clippy'), ('gato-preto', 'Pretí'), ('golden', 'Marla'), ('panda', 'Mochi'), ('papagaio', 'Louro José'), ('yorkshire', 'Zoe')]:
+        for key, label in [('clippy', 'Clippy'), ('gato-preto', 'Pretí'), ('golden', 'Marla'), ('panda', 'Mochi'), ('papagaio', 'Louro José'), ('yorkshire', 'Zoe'), ('mixo', 'Mixo — e.mix'), ('mixi', 'Mixi — camaleão')]:
             action = choices.addAction(label)
             action.setCheckable(True)
             action.setData(key)
@@ -130,11 +145,17 @@ class Pet(QWidget):
         self.character_actions.triggered.connect(self.change_character)
         self.menu.addSeparator()
         self.menu.addAction('Mostrar / esconder', self.toggle_visible)
-        self.pause_action = self.menu.addAction('Pausar reações', self.toggle_pause)
+        self.mirror_action = self.menu.addAction('Espelhar mascote')
+        self.mirror_action.setCheckable(True)
+        self.mirror_action.setChecked(self.mirrored)
+        self.mirror_action.toggled.connect(self.toggle_mirror)
+        self.pause_action = self.menu.addAction('Pausar reações')
         self.pause_action.setCheckable(True)
-        self.start_action = self.menu.addAction('Iniciar com o computador', self.toggle_start)
+        self.pause_action.toggled.connect(self.toggle_pause)
+        self.start_action = self.menu.addAction('Iniciar com o computador')
         self.start_action.setCheckable(True)
         self.start_action.setChecked(AUTOSTART.is_file())
+        self.start_action.toggled.connect(self.toggle_start)
         self.menu.addSeparator()
         self.menu.addAction('Sair', QApplication.instance().quit)
         self.tray = QSystemTrayIcon(QIcon.fromTheme('face-smile'), self)
@@ -150,12 +171,22 @@ class Pet(QWidget):
     def change_character(self, action):
         self.character = action.data()
         self.settings.setValue('bichinho', self.character)
+        self.message_until = time.monotonic() + 7
         self.update()
 
     def toggle_visible(self):
         self.setVisible(not self.isVisible())
+    def toggle_mirror(self, checked):
+        self.mirrored = checked
+        self.settings.setValue('espelhar_mascote', checked)
+        self.update()
     def toggle_pause(self, checked):
         self.paused = checked
+    def cursor_for_paint(self, internally_mirrored=False):
+        cursor = self.mapFromGlobal(QCursor.pos())
+        if self.mirrored != internally_mirrored:
+            return QPointF(self.width() - cursor.x(), cursor.y())
+        return cursor
     def toggle_start(self, checked):
         if checked:
             AUTOSTART.parent.mkdir(parents=True, exist_ok=True)
@@ -231,7 +262,7 @@ class Pet(QWidget):
         p.setPen(outline)
         p.setBrush(QColor('#29292d'))
         p.drawEllipse(QRectF(24, 62, 123, 97))
-        cursor = self.mapFromGlobal(QCursor.pos())
+        cursor = self.cursor_for_paint()
         for ex in (58, 111):
             if self.sleeping or self.t % 4.7 < .12:
                 p.setPen(QPen(QColor('#e6b64f'), 3, Qt.SolidLine, Qt.RoundCap))
@@ -332,7 +363,7 @@ class Pet(QWidget):
         tuft.quadTo(89, 49, 80, 62)
         tuft.closeSubpath()
         p.drawPath(tuft)
-        cursor = self.mapFromGlobal(QCursor.pos())
+        cursor = self.cursor_for_paint()
         for ex in (63, 112):
             p.setPen(QPen(QColor('#ad7637'), 3, Qt.SolidLine, Qt.RoundCap))
             p.drawArc(QRectF(ex - 11, 73, 21, 12), 25 * 16, 135 * 16)
@@ -429,7 +460,7 @@ class Pet(QWidget):
         head.cubicTo(155, 139, 130, 155, 90, 156)
         head.cubicTo(49, 156, 22, 140, 26, 100)
         p.drawPath(head)
-        cursor = self.mapFromGlobal(QCursor.pos())
+        cursor = self.cursor_for_paint()
         for ex, angle in ((60, 24), (116, -24)):
             p.save()
             p.translate(ex, 105)
@@ -556,8 +587,8 @@ class Pet(QWidget):
             p.drawEllipse(QRectF(52, 65, 34, 38))
             p.drawArc(QRectF(56, 79, 26, 12), 180 * 16, 180 * 16)
         else:
-            cursor = self.mapFromGlobal(QCursor.pos())
-            dx, dy = self.width() - cursor.x() - ex, cursor.y() - ey
+            cursor = self.cursor_for_paint(internally_mirrored=True)
+            dx, dy = cursor.x() - ex, cursor.y() - ey
             distance = max(math.hypot(dx, dy), 1)
             p.setPen(Qt.NoPen)
             p.setBrush(QColor('#242124'))
@@ -713,7 +744,7 @@ class Pet(QWidget):
         p.setPen(QPen(QColor('#d99c60'), 2, Qt.SolidLine, Qt.RoundCap))
         for x in (48, 61, 109, 122):
             p.drawArc(QRectF(x - 8, 77, 20, 31), 35 * 16, 100 * 16)
-        cursor = self.mapFromGlobal(QCursor.pos())
+        cursor = self.cursor_for_paint()
         for ex in (61, 113):
             if self.sleeping or self.t % 4.7 < .12:
                 p.setPen(outline)
@@ -758,16 +789,134 @@ class Pet(QWidget):
         p.setBrush(QColor('#9b8c7e'))
         p.drawEllipse(QRectF(80, 124, 8, 3))
 
+    def paint_mixo(self, p, happy):
+        # Living e.mix logo: a yellow chevron and two separate turquoise pieces.
+        dark = QColor('#343436')
+        pieces = [
+            ([(35, 43), (76, 43), (121, 111), (76, 180), (35, 180), (80, 111)], '#fff76a', '#f1e73d', '#d8cd32'),
+            ([(124, 43), (166, 43), (133, 91), (112, 62)], '#4cddd2', '#28c4bf', '#1ea9a6'),
+            ([(133, 133), (166, 180), (124, 180), (112, 160)], '#4cddd2', '#28c4bf', '#1ea9a6'),
+        ]
+        for points, light, base, edge in pieces:
+            shape = QPainterPath(QPointF(*points[0]))
+            for point in points[1:]:
+                shape.lineTo(*point)
+            shape.closeSubpath()
+            gradient = QLinearGradient(40, 43, 145, 185)
+            gradient.setColorAt(0, QColor(light))
+            gradient.setColorAt(1, QColor(base))
+            p.setBrush(gradient)
+            p.setPen(QPen(QColor(edge), 1.5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            p.drawPath(shape)
+
+        cursor = self.cursor_for_paint()
+        for ex, ey in ((88, 94), (122, 91)):
+            p.setPen(QPen(QColor('#77776d'), 1))
+            p.setBrush(QColor('#fffefd'))
+            p.drawEllipse(QRectF(ex - 14, ey - 20, 28, 40))
+            if self.sleeping or self.t % 4.7 < .12:
+                p.setPen(QPen(dark, 2.5, Qt.SolidLine, Qt.RoundCap))
+                p.drawArc(QRectF(ex - 9, ey - 5, 18, 10), 180 * 16, 180 * 16)
+            else:
+                dx, dy = cursor.x() - ex, cursor.y() - ey
+                distance = max(math.hypot(dx, dy), 1)
+                px, py = ex + dx / distance * 5, ey + dy / distance * 7
+                p.setPen(Qt.NoPen)
+                p.setBrush(QColor('#242426'))
+                p.drawEllipse(QPointF(px, py), 7, 10 if not happy else 8)
+                p.setBrush(Qt.white)
+                p.drawEllipse(QPointF(px - 2, py - 4), 2.5, 3)
+            p.setBrush(Qt.NoBrush)
+            p.setPen(QPen(dark, 4, Qt.SolidLine, Qt.RoundCap))
+            p.drawArc(QRectF(ex - 12, ey - 32 - (3 if happy else 0), 23, 15), 25 * 16, 135 * 16)
+        p.setPen(QPen(dark, 2.5, Qt.SolidLine, Qt.RoundCap))
+        p.setBrush(QColor('#343436') if happy else Qt.NoBrush)
+        smile = QPainterPath(QPointF(89, 122))
+        smile.quadTo(100, 135 if happy else 132, 110, 120)
+        if happy:
+            smile.closeSubpath()
+        p.drawPath(smile)
+
+    def paint_mixi(self, p, happy):
+        pose = 'dormindo' if self.sleeping else 'animado' if happy else 'normal'
+        suffix = '-espelhado' if self.mirrored else ''
+        # Ignore faint alpha noise at the image edges and keep every pose grounded.
+        source = (
+            {
+                'normal': QRectF(235, 40, 844, 1175),
+                'animado': QRectF(51, 25, 1104, 1202),
+                'dormindo': QRectF(15, 306, 1210, 833),
+            } if self.mirrored else {
+                'normal': QRectF(184, 46, 824, 1169),
+                'animado': QRectF(109, 29, 1076, 1196),
+                'dormindo': QRectF(32, 311, 1206, 824),
+            }
+        )[pose]
+        scale = min(170 / source.width(), 188 / source.height())
+        width, height = source.width() * scale, source.height() * scale
+        target = QRectF((self.width() - width) / 2, 220 - height, width, height)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        p.drawPixmap(target, self.mixi_poses[pose + suffix], source)
+        if pose != 'normal':
+            return
+
+        blink = self.t % 4.7 < .14
+        overlay = self.mixi_poses[('piscando' if blink else 'olhos-limpos') + suffix]
+        # Draw only the edited eye regions, leaving the original sprite unchanged.
+        p.save()
+        p.translate(target.left(), target.top())
+        p.scale(scale, scale)
+        p.translate(-source.left(), -source.top())
+        eyes = (
+            (
+                (QRectF(279, 365, 130, 174), QRectF(305, 382, 101, 148)),
+                (QRectF(533, 302, 195, 184), QRectF(546, 326, 151, 154)),
+            ) if self.mirrored else (
+                (QRectF(530, 305, 187, 180), QRectF(560, 336, 140, 143)),
+                (QRectF(844, 364, 127, 171), QRectF(852, 379, 100, 143)),
+            )
+        )
+        cursor = self.cursor_for_paint(internally_mirrored=self.mirrored)
+        cursor_x = source.left() + (cursor.x() - target.left()) / scale
+        cursor_y = source.top() + (cursor.y() - target.top()) / scale
+        for eye, iris in eyes:
+            clip = QPainterPath()
+            clip.addEllipse(eye)
+            p.save()
+            p.setClipPath(clip)
+            p.drawPixmap(eye, overlay, eye)
+            if not blink:
+                dx = cursor_x - iris.center().x()
+                dy = cursor_y - iris.center().y()
+                distance = max(math.hypot(dx, dy), 170)
+                moving_iris = iris.translated(dx / distance * 21, dy / distance * 15)
+                iris_clip = QPainterPath()
+                iris_clip.addEllipse(moving_iris)
+                p.setClipPath(iris_clip, Qt.IntersectClip)
+                p.drawPixmap(moving_iris, self.mixi_poses['normal' + suffix], iris)
+            p.restore()
+        p.restore()
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         happy = self.t < self.clicked_until
-        bounce = -abs(math.sin(self.t * 15)) * 9 if happy else math.sin(self.t * 2) * 2
+        bounce = 0 if self.character == 'mixi' and self.sleeping else -abs(math.sin(self.t * 15)) * 9 if happy else math.sin(self.t * 2) * 2
         p.setPen(Qt.NoPen)
         p.setBrush(QColor(0, 0, 0, 28))
         p.drawEllipse(QRectF(39, 220, 105, 9))
         p.translate(0, bounce)
-        if self.character == 'gato-preto':
+        p.save()
+        if self.mirrored and self.character != 'mixi':
+            p.translate(self.width(), 0)
+            p.scale(-1, 1)
+        if self.character == 'mixo':
+            p.translate(0, 24)
+            self.paint_mixo(p, happy)
+            p.translate(0, -24)
+        elif self.character == 'mixi':
+            self.paint_mixi(p, happy)
+        elif self.character == 'gato-preto':
             self.paint_cat(p, happy)
         elif self.character == 'golden':
             self.paint_golden(p, happy)
@@ -794,7 +943,7 @@ class Pet(QWidget):
             for color, width in [('#44445f', 14), ('#aaa9c7', 10), ('#d9daec', 4)]:
                 p.setPen(QPen(QColor(color), width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
                 p.drawPath(wire)
-            cursor = self.mapFromGlobal(QCursor.pos())
+            cursor = self.cursor_for_paint()
             blink = self.t % 4.7 < .12
             for ex, ey in [(61, 86), (111, 99)]:
                 p.setPen(QPen(QColor('#77778e'), 1.5))
@@ -814,10 +963,11 @@ class Pet(QWidget):
                     p.drawEllipse(QPointF(px - 3, py - 4), 3.5, 3.5)
                 p.setPen(QPen(QColor('#333344'), 4, Qt.SolidLine, Qt.RoundCap))
                 p.drawArc(QRectF(ex - 22, ey - 37 - (5 if happy else 0), 42, 20), 30 * 16, 130 * 16)
+        p.restore()
         p.setPen(QColor('#65617f'))
         p.setFont(QFont('Sans Serif', 13, QFont.Bold))
         if self.sleeping:
-            p.drawText(131, 50, 'z Z')
+            p.drawText(131, 94 if self.character == 'mixi' else 50, 'z Z')
         elif happy:
             p.setPen(QColor('#d8874a'))
             p.drawText(139, 67, '✦')
@@ -827,7 +977,10 @@ class Pet(QWidget):
             p.drawRoundedRect(QRectF(9, 2, 160, 25), 10, 10)
             p.setPen(QColor('#44415a'))
             p.setFont(QFont('Sans Serif', 10))
-            p.drawText(QRectF(9, 2, 160, 25), Qt.AlignCenter, 'Oi! Vou ficar por aqui.')
+            greeting = ('Oi, eu sou o Mixi!' if self.character == 'mixi' else
+                        'Oi, eu sou o Mixo!' if self.character == 'mixo' else
+                        'Oi! Vou ficar por aqui.')
+            p.drawText(QRectF(9, 2, 160, 25), Qt.AlignCenter, greeting)
         p.end()
 
 if __name__ == '__main__':
