@@ -1,0 +1,61 @@
+name: Release Linux
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check release version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: test "$GITHUB_REF_NAME" = 'v1.0'
+      - name: Build and test on Ubuntu 22.04
+        run: bash scripts/build-linux.sh
+      - name: Test on Debian 12 and Ubuntu 24.04 without Python
+        run: |
+          for image in debian:12-slim ubuntu:24.04; do
+            docker run --rm -v "$PWD/dist:/release:ro" -v "$PWD/scripts:/checks:ro" \
+              "$image" bash /checks/check-linux-binary.sh
+          done
+      - name: Upload packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: clips-linux
+          path: |
+            dist/clips-1.0-linux-x86_64
+            dist/clips-1.0-linux-x86_64.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: clips-linux
+          path: dist
+      - name: Verify downloads and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          (cd dist && sha256sum --check SHA256SUMS)
+          gh release create "$GITHUB_REF_NAME" \
+            dist/clips-1.0-linux-x86_64 \
+            dist/clips-1.0-linux-x86_64.tar.gz dist/SHA256SUMS \
+            --verify-tag --draft --title 'Clips 1.0 — Mascote do PC' \
+            --notes-file packaging/release-notes-1.0.md
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest

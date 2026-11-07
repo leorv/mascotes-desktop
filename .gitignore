@@ -1,3 +1,7 @@
 __pycache__/
 mascote.log
 preview.png
+.venv/
+build/
+dist/
+*.spec

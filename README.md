@@ -28,6 +28,23 @@ O **Clips** é um mascote local feito em Python e PyQt5. Ele fica sobre as janel
 
 ## 📋 Pré-requisitos
 
+### Executável pronto — Linux
+
+Baixe a versão **1.0** na [área de releases](https://github.com/leorv/mascotes-desktop/releases/latest).
+O executável inclui Python, PyQt5 e as imagens. É destinado a **Debian 12+ e Ubuntu 22.04+, de 64 bits (amd64/x86_64)**, em sessão **X11/Xorg**.
+
+Baixe `clips-1.0-linux-x86_64` e, na pasta do download, execute:
+
+```bash
+chmod +x clips-1.0-linux-x86_64
+./clips-1.0-linux-x86_64
+```
+
+Você também pode baixar e extrair `clips-1.0-linux-x86_64.tar.gz`, que inclui o executável com permissão de execução, este README e a licença.
+Mantenha o executável em uma pasta fixa se ativar **Iniciar com o computador**.
+
+### Execução pelo código-fonte
+
 - Python 3.9 ou mais recente — confira com `python3 --version` no Linux ou `py --version` no Windows.
 - Uma sessão gráfica X11/Xorg no Linux.
 - PyQt5, instalado pelos comandos abaixo.
@@ -133,7 +150,19 @@ O novo **Mixi** é o camaleão da e.mix. Selecione **Trocar bichinho → Mixi �
 
 Ao usar **Espelhar mascote** com o Mixi, o programa usa versões voltadas para o outro lado para manter a escrita **e.Mix** legível no boné e no colete.
 
-As imagens em `referencias-mascotes/` são referências visuais. As três imagens em `assets/mixi/` são usadas pelo programa e devem acompanhar o arquivo `mascote.py`.
+As imagens em `referencias-mascotes/` são referências visuais. As dez imagens em `assets/mixi/` são usadas pelo programa e devem acompanhar o arquivo `mascote.py` ao executar pelo código-fonte. No executável da release, elas já estão incluídas.
+
+## 📦 Gerar o executável Linux
+
+Com Docker instalado, execute na pasta do projeto:
+
+```bash
+bash scripts/build-linux.sh
+```
+
+Os arquivos são gerados em `dist/`, com o executável, o pacote `.tar.gz` e `SHA256SUMS`.
+O build usa Ubuntu 22.04 para manter a compatibilidade com Debian 12+ e Ubuntu 22.04+ e testa todos os mascotes e o executável empacotado em uma sessão X11 virtual.
+O workflow do GitHub Actions também testa o binário em Debian 12 e Ubuntu 24.04 antes de publicar a tag `v1.0` na área de releases.
 
 ## 🛠️ Solução de problemas
 

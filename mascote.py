@@ -17,6 +17,8 @@ from PyQt5.QtGui import QColor, QPainter, QPainterPath, QPen, QCursor, QIcon, QF
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QSystemTrayIcon, QActionGroup
 
 BASE = Path(__file__).resolve().parent
+VERSION = '1.0'
+IS_FROZEN = getattr(sys, 'frozen', False)
 IS_WINDOWS = os.name == 'nt'
 if IS_WINDOWS:
     APPDATA = Path(os.environ.get('APPDATA', Path.home() / 'AppData/Roaming'))
@@ -24,14 +26,22 @@ if IS_WINDOWS:
     WINDOWS_PYTHON = Path(sys.executable).with_name('pythonw.exe')
     if not WINDOWS_PYTHON.exists():
         WINDOWS_PYTHON = Path(sys.executable)
-    STARTUP_TEXT = f'@start "" "{WINDOWS_PYTHON}" "{BASE / "mascote.py"}"\n'
+    STARTUP_TEXT = (f'@start "" "{sys.executable}"\n' if IS_FROZEN else
+                    f'@start "" "{WINDOWS_PYTHON}" "{BASE / "mascote.py"}"\n')
 else:
     AUTOSTART = Path.home() / '.config/autostart/mascote-clips.desktop'
+    # Desktop Entry Exec values have their own escaping rules, including %%.
+    def desktop_quote(value):
+        value = str(value).replace('\\', '\\\\\\\\').replace('"', '\\\\"')
+        return '"' + value.replace('`', '\\\\`').replace('$', '\\\\$').replace('%', '%%') + '"'
+
+    startup_args = [sys.executable] if IS_FROZEN else [sys.executable, BASE / 'mascote.py']
+    startup_exec = ' '.join(desktop_quote(arg) for arg in startup_args)
     STARTUP_TEXT = f'''[Desktop Entry]
 Type=Application
 Name=Clips — Mascote do PC
 Comment=Um clipe animado que acompanha o mouse
-Exec="{sys.executable}" "{BASE / 'mascote.py'}"
+Exec={startup_exec}
 Icon=face-smile
 Terminal=false
 Categories=Game;
@@ -984,7 +994,11 @@ class Pet(QWidget):
         p.end()
 
 if __name__ == '__main__':
+    if '--version' in sys.argv:
+        print(f'Clips — Mascote do PC {VERSION}')
+        sys.exit(0)
     app = QApplication(sys.argv)
+    app.setApplicationVersion(VERSION)
     app.setQuitOnLastWindowClosed(False)
     lock_root = QStandardPaths.writableLocation(QStandardPaths.RuntimeLocation)
     if not lock_root:
@@ -997,6 +1011,6 @@ if __name__ == '__main__':
     pet = Pet(pointer)
     pet.show()
     if '--preview' in sys.argv:
-        QTimer.singleShot(300, lambda: pet.grab().save(str(BASE / 'preview.png')))
+        QTimer.singleShot(300, lambda: pet.grab().save(str(Path.cwd() / 'preview.png')))
         QTimer.singleShot(500, app.quit)
     sys.exit(app.exec_())
