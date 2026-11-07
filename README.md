@@ -5,11 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="referencias-mascotes/gato-preto.png" alt="Mascote gato preto" width="90">
-  <img src="referencias-mascotes/cachorro-golden.png" alt="Mascote golden" width="90">
-  <img src="referencias-mascotes/panda.png" alt="Mascote panda" width="90">
-  <img src="referencias-mascotes/papagaio.png" alt="Mascote papagaio" width="90">
-  <img src="referencias-mascotes/yorkshire.png" alt="Mascote Yorkshire" width="90">
+  <img src="docs/clips.png" alt="Clippy, o clipe animado do Clips, sobre uma pasta azul" width="306">
 </p>
 
 O **Clips** é um mascote local feito em Python e PyQt5. Ele fica sobre as janelas, pode ser arrastado pela tela e oferece opções pela bandeja do sistema. Os personagens desenhados no programa acompanham o mouse com os olhos.
@@ -24,46 +20,57 @@ O **Clips** é um mascote local feito em Python e PyQt5. Ele fica sobre as janel
 - 🖐️ Pode ser arrastado para qualquer lugar da tela.
 - ⚙️ Salva o mascote escolhido para a próxima execução.
 - 🚀 Permite iniciar automaticamente com o computador.
-- 🐧 Funciona no Linux com X11/Xorg e no Windows.
+- 🐧 Executáveis para Debian/Ubuntu com X11/Xorg e Windows 10/11 de 64 bits.
 
-## 📋 Pré-requisitos
+## 📥 Download — versão 1.0
 
-### Executável pronto — Linux
+Os executáveis estão na mesma [release v1.0](https://github.com/leorv/mascotes-desktop/releases/tag/v1.0), com **Python, PyQt5 e as imagens incluídos**. Não é necessário instalar essas dependências para usar o mascote.
 
-Baixe a versão **1.0** na [área de releases](https://github.com/leorv/mascotes-desktop/releases/latest).
-O executável inclui Python, PyQt5 e as imagens. É destinado a **Debian 12+ e Ubuntu 22.04+, de 64 bits (amd64/x86_64)**, em sessão **X11/Xorg**.
+| Sistema | Executável | Pacote com README e licença |
+| --- | --- | --- |
+| Windows 10/11 — 64 bits (x64) | [Baixar .exe](https://github.com/leorv/mascotes-desktop/releases/download/v1.0/clips-1.0-windows-x86_64.exe) | [Baixar .zip](https://github.com/leorv/mascotes-desktop/releases/download/v1.0/clips-1.0-windows-x86_64.zip) |
+| Debian 12+ / Ubuntu 22.04+ — 64 bits (amd64/x86_64) | [Baixar executável Linux](https://github.com/leorv/mascotes-desktop/releases/download/v1.0/clips-1.0-linux-x86_64) | [Baixar .tar.gz](https://github.com/leorv/mascotes-desktop/releases/download/v1.0/clips-1.0-linux-x86_64.tar.gz) |
 
-Baixe `clips-1.0-linux-x86_64` e, na pasta do download, execute:
+### Windows 10/11
+
+Baixe `clips-1.0-windows-x86_64.exe` e abra com dois cliques. Você também pode extrair o pacote `.zip` e abrir o executável que está dentro dele. O mascote abre sem uma janela de terminal.
+
+### Debian / Ubuntu
+
+O mascote exige uma sessão gráfica **X11/Xorg**; Wayland não é suportado. Na pasta do download, dê permissão de execução e abra o programa:
 
 ```bash
 chmod +x clips-1.0-linux-x86_64
 ./clips-1.0-linux-x86_64
 ```
 
-Você também pode baixar e extrair `clips-1.0-linux-x86_64.tar.gz`, que inclui o executável com permissão de execução, este README e a licença.
-Mantenha o executável em uma pasta fixa se ativar **Iniciar com o computador**.
+No pacote `.tar.gz`, o executável já tem permissão de execução. Extraia o pacote antes de abrir o programa.
 
-### Executável pronto — Windows 10/11
+### Preferências e inicialização automática
 
-Na [release v1.0](https://github.com/leorv/mascotes-desktop/releases/tag/v1.0), baixe `clips-1.0-windows-x86_64.exe` e abra com dois cliques. Python, PyQt5 e as imagens estão incluídos. Destinado a Windows 10/11 de 64 bits (x64).
+Clique com o botão direito no mascote para trocar de personagem, espelhar, pausar ou escolher **Sair**. O menu também está disponível pelo ícone na bandeja do sistema.
 
-Para gerar o executável em um ambiente Windows com Python 3.11 de 64 bits:
+Mantenha o executável em uma pasta fixa antes de ativar **Iniciar com o computador**. Se mudar o arquivo de lugar, desative e ative novamente essa opção usando o executável no novo local.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build-windows.ps1
+### Conferir a integridade do download
+
+No Linux, baixe [SHA256SUMS](https://github.com/leorv/mascotes-desktop/releases/download/v1.0/SHA256SUMS) na mesma pasta do executável ou do pacote e execute:
+
+```bash
+sha256sum --ignore-missing --check SHA256SUMS
 ```
 
-### Execução pelo código-fonte
+No Windows, baixe [SHA256SUMS-windows.txt](https://github.com/leorv/mascotes-desktop/releases/download/v1.0/SHA256SUMS-windows.txt) e compare o hash listado para o `.exe` com a saída deste comando no PowerShell:
 
-- Python 3.9 ou mais recente — confira com `python3 --version` no Linux ou `py --version` no Windows.
-- Uma sessão gráfica X11/Xorg no Linux.
-- PyQt5, instalado pelos comandos abaixo.
+```powershell
+Get-FileHash .\clips-1.0-windows-x86_64.exe -Algorithm SHA256
+```
 
-## 🚀 Instalação e execução
+## 🚀 Executar pelo código-fonte
+
+Para desenvolver ou executar o script, use Python 3.9 ou mais recente e PyQt5. Baixe o código do repositório e abra um terminal na pasta do projeto. As imagens em `assets/mixi/` devem acompanhar `mascote.py`.
 
 ### Linux
-
-O programa consulta a posição do cursor usando X11. Em uma sessão Wayland, entre em uma sessão **Xorg** ou **X11** antes de iniciar.
 
 No Ubuntu ou Debian, instale o Python, o suporte a ambientes virtuais e a biblioteca X11:
 
@@ -72,60 +79,30 @@ sudo apt update
 sudo apt install python3 python3-venv libx11-6
 ```
 
-Na pasta do projeto, crie e ative um ambiente virtual:
+Crie o ambiente, instale a dependência e execute em uma sessão X11/Xorg:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install PyQt5
-```
-
-Inicie o mascote:
-
-```bash
 python mascote.py
 ```
 
-Para encerrar, clique com o botão direito no mascote e escolha **Sair**, ou pressione `Ctrl+C` no terminal.
-
-> Em outras distribuições, instale os pacotes equivalentes a Python 3, `venv`, `pip` e à biblioteca X11 pelo gerenciador de pacotes da distribuição.
+Em outras distribuições, instale os pacotes equivalentes pelo gerenciador de pacotes da distribuição.
 
 ### Windows
 
-1. Instale o Python pelo [site oficial](https://www.python.org/downloads/windows/). Durante a instalação, marque **Add Python to PATH**.
-2. Abra o PowerShell na pasta do projeto.
-3. Crie e ative um ambiente virtual:
+Instale o Python pelo [site oficial](https://www.python.org/downloads/windows/) e execute no PowerShell, na pasta do projeto:
 
 ```powershell
 py -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install PyQt5
+.\.venv\Scripts\python.exe mascote.py
 ```
 
-4. Instale o PyQt5:
-
-```powershell
-python -m pip install --upgrade pip
-python -m pip install PyQt5
-```
-
-5. Inicie o mascote:
-
-```powershell
-python mascote.py
-```
-
-Se o PowerShell bloquear a ativação do ambiente virtual, execute uma vez:
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-```
-
-Depois, repita o comando de ativação. Para executar sem manter uma janela do terminal aberta, use:
-
-```powershell
-pythonw mascote.py
-```
+Para abrir sem manter o terminal, use `.\.venv\Scripts\pythonw.exe mascote.py`.
 
 ## 🎮 Controles
 
@@ -156,13 +133,17 @@ pythonw mascote.py
 
 O **Mixo** preserva o antigo mascote geométrico e suas reações. Quem já o tinha escolhido continua com ele após a atualização.
 
-O novo **Mixi** é o camaleão da e.mix. Selecione **Trocar bichinho → Mixi — camaleão** para vê-lo em três poses: normal, animado ao clicar e dormindo após 35 segundos sem atividade. Na pose normal, ele pisca e acompanha o mouse com os olhos. A escolha fica salva para a próxima execução.
+O **Mixi** é o camaleão da e.mix. Selecione **Trocar bichinho → Mixi — camaleão** para vê-lo em três poses: normal, animado ao clicar e dormindo após 35 segundos sem atividade. Na pose normal, ele pisca e acompanha o mouse com os olhos. A escolha fica salva para a próxima execução.
 
 Ao usar **Espelhar mascote** com o Mixi, o programa usa versões voltadas para o outro lado para manter a escrita **e.Mix** legível no boné e no colete.
 
 As imagens em `referencias-mascotes/` são referências visuais. As dez imagens em `assets/mixi/` são usadas pelo programa e devem acompanhar o arquivo `mascote.py` ao executar pelo código-fonte. No executável da release, elas já estão incluídas.
 
-## 📦 Gerar o executável Linux
+## 📦 Gerar os executáveis
+
+Os scripts de build incluem as imagens e a licença, executam testes de renderização dos oito mascotes e validam o executável empacotado. Os arquivos são gerados em `dist/`.
+
+### Linux — com Docker
 
 Com Docker instalado, execute na pasta do projeto:
 
@@ -170,9 +151,29 @@ Com Docker instalado, execute na pasta do projeto:
 bash scripts/build-linux.sh
 ```
 
-Os arquivos são gerados em `dist/`, com o executável, o pacote `.tar.gz` e `SHA256SUMS`.
-O build usa Ubuntu 22.04 para manter a compatibilidade com Debian 12+ e Ubuntu 22.04+ e testa todos os mascotes e o executável empacotado em uma sessão X11 virtual.
-O workflow do GitHub Actions também testa o binário em Debian 12 e Ubuntu 24.04 antes de publicar a tag `v1.0` na área de releases.
+O build usa Ubuntu 22.04 e gera o executável, o pacote `.tar.gz` e `SHA256SUMS`. As versões de PyQt5 e PyInstaller estão em [`requirements-build.txt`](requirements-build.txt).
+
+### Windows — com Python 3.11 de 64 bits e Git
+
+No Windows, abra o PowerShell em um checkout Git do projeto e execute:
+
+```powershell
+py -3.11 -m venv .venv
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
+.\scripts\build-windows.ps1
+```
+
+O script instala as dependências de [`requirements-build-windows.txt`](requirements-build-windows.txt) e gera o `.exe` sem console, o pacote `.zip`, o arquivo de código-fonte e `SHA256SUMS-windows.txt`.
+
+### Builds e validação no GitHub Actions
+
+- [Workflow Linux](.github/workflows/release.yml): compila e testa no Ubuntu 22.04, testa o executável em Debian 12 e Ubuntu 24.04 sem Python instalado e publica a release ao receber a tag `v1.0`.
+- [Workflow Windows](.github/workflows/release-windows.yml): compila e testa no Windows Server 2022 e adiciona os arquivos à release `v1.0` existente.
+
+Os testes verificam os oito personagens em 48 combinações de pose e espelhamento, as dez imagens do Mixi e a renderização do executável. Os testes atuais também verificam o ícone da bandeja e a criação e remoção da configuração de inicialização automática. Ainda não houve validação manual em Windows 10/11.
+
+O código do executável Linux publicado corresponde à tag `v1.0`. O Windows inclui os ajustes de empacotamento posteriores; seu commit exato está nas notas da release e o código correspondente está em [`clips-1.0-windows-source.zip`](https://github.com/leorv/mascotes-desktop/releases/download/v1.0/clips-1.0-windows-source.zip).
 
 ## 🛠️ Solução de problemas
 
@@ -198,11 +199,7 @@ python -m pip install PyQt5
 
 ### Windows: o comando `python` não foi encontrado
 
-Reinstale o Python marcando **Add Python to PATH**, ou use o launcher do Windows:
-
-```powershell
-py mascote.py
-```
+Ao executar pelo código-fonte, use os comandos com `py` e `.\.venv\Scripts\python.exe` da seção de instalação. Para o executável `.exe` da release, Python não é necessário.
 
 ### O mascote parece não abrir
 
@@ -212,27 +209,16 @@ O programa pode já estar em execução. Verifique a bandeja do sistema antes de
 
 ```text
 .
-├── assets/
-│   └── mixi/
-│       ├── animado.png
-│       ├── animado-espelhado.png
-│       ├── dormindo.png
-│       ├── dormindo-espelhado.png
-│       ├── normal.png
-│       ├── normal-espelhado.png
-│       ├── olhos-limpos.png
-│       ├── olhos-limpos-espelhado.png
-│       ├── piscando.png
-│       └── piscando-espelhado.png
-├── mascote.py
-├── referencias-mascotes/
-│   ├── cachorro-golden.png
-│   ├── gato-preto.png
-│   ├── mixi.png
-│   ├── panda.png
-│   ├── papagaio.png
-│   ├── prompts.md
-│   └── yorkshire.png
+├── .github/workflows/          # Builds e publicação no GitHub
+├── assets/mixi/                # Dez imagens usadas pelo mascote Mixi
+├── docs/clips.png              # Imagem de apresentação do README
+├── packaging/                  # Ambiente de build Linux e notas da release
+├── referencias-mascotes/       # Referências visuais dos personagens
+├── scripts/                    # Builds Linux/Windows e testes de renderização
+├── mascote.py                  # Aplicativo
+├── requirements-build.txt      # Dependências de build Linux
+├── requirements-build-windows.txt
+├── LICENSE
 └── README.md
 ```
 
