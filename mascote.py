@@ -168,7 +168,11 @@ class Pet(QWidget):
         self.start_action.toggled.connect(self.toggle_start)
         self.menu.addSeparator()
         self.menu.addAction('Sair', QApplication.instance().quit)
-        self.tray = QSystemTrayIcon(QIcon.fromTheme('face-smile'), self)
+        icon = QIcon.fromTheme('face-smile')
+        if icon.isNull():
+            icon = QIcon(str(BASE / 'assets' / 'mixi' / 'normal.png'))
+        self.setWindowIcon(icon)
+        self.tray = QSystemTrayIcon(icon, self)
         self.tray.setToolTip('Clips — Mascote do PC')
         self.tray.setContextMenu(self.menu)
         self.tray.activated.connect(lambda reason: self.toggle_visible() if reason == QSystemTrayIcon.Trigger else None)
@@ -1003,6 +1007,7 @@ if __name__ == '__main__':
     lock_root = QStandardPaths.writableLocation(QStandardPaths.RuntimeLocation)
     if not lock_root:
         lock_root = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) or str(BASE)
+    Path(lock_root).mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(Path(lock_root) / 'mascote-clips.lock'))
     if not lock.tryLock(100):
         sys.exit(0)

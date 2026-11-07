@@ -1,0 +1,58 @@
+name: Add Windows to v1.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/release-windows.yml
+      - scripts/build-windows.ps1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+          architecture: x64
+      - name: Build and test Windows executable
+        shell: pwsh
+        run: ./scripts/build-windows.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: clips-windows
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/SHA256SUMS-windows.txt
+          if-no-files-found: error
+  publish:
+    needs: windows
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: clips-windows
+          path: dist
+      - name: Add files to existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          (cd dist && sha256sum --check SHA256SUMS-windows.txt)
+          test "$(gh release view v1.0 --json isDraft --jq .isDraft)" = false
+          gh release upload v1.0 dist/*.exe dist/*.zip dist/SHA256SUMS-windows.txt --clobber
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          notes = Path('packaging/release-notes-1.0.md').read_text()
+          notes += '\n\nCódigo-fonte usado no build Windows: [' + os.environ['GITHUB_SHA'][:7] + '](https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/tree/' + os.environ['GITHUB_SHA'] + '). Também disponível em `clips-1.0-windows-source.zip`.\n'
+          Path('/tmp/clips-notes.md').write_text(notes)
+          PY
+          gh release edit v1.0 --notes-file /tmp/clips-notes.md

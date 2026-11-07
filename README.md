@@ -43,6 +43,16 @@ chmod +x clips-1.0-linux-x86_64
 Você também pode baixar e extrair `clips-1.0-linux-x86_64.tar.gz`, que inclui o executável com permissão de execução, este README e a licença.
 Mantenha o executável em uma pasta fixa se ativar **Iniciar com o computador**.
 
+### Executável pronto — Windows 10/11
+
+Na [release v1.0](https://github.com/leorv/mascotes-desktop/releases/tag/v1.0), baixe `clips-1.0-windows-x86_64.exe` e abra com dois cliques. Python, PyQt5 e as imagens estão incluídos. Destinado a Windows 10/11 de 64 bits (x64).
+
+Para gerar o executável em um ambiente Windows com Python 3.11 de 64 bits:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build-windows.ps1
+```
+
 ### Execução pelo código-fonte
 
 - Python 3.9 ou mais recente — confira com `python3 --version` no Linux ou `py --version` no Windows.

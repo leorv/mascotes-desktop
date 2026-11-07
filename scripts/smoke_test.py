@@ -1,5 +1,6 @@
 """Exercise all poses and optionally the standalone binary in isolated settings."""
 import os
+import atexit
 from pathlib import Path
 import runpy
 import subprocess
@@ -22,12 +23,24 @@ def main():
         from PyQt5.QtWidgets import QApplication
         import mascote
 
+        if mascote.IS_WINDOWS:
+            settings_backup = QSettings('MascoteDoPC', 'Mascotes')
+            previous = {key: settings_backup.value(key) for key in settings_backup.allKeys()}
+            def restore_settings():
+                settings_backup.clear()
+                for key, value in previous.items():
+                    settings_backup.setValue(key, value)
+                settings_backup.sync()
+            atexit.register(restore_settings)
+
         executable = '/home/example/Meus mascotes/Clips 1.0'
         with patch.object(sys, 'frozen', True, create=True), patch.object(sys, 'executable', executable):
             frozen = runpy.run_path(str(Path(mascote.__file__)))
         if not mascote.IS_WINDOWS:
             assert f'Exec="{executable}"\n' in frozen['STARTUP_TEXT']
             assert 'mascote.py' not in frozen['STARTUP_TEXT']
+        else:
+            assert frozen['STARTUP_TEXT'] == f'@start "" "{executable}"\n'
 
         class Pointer:
             def read(self):
@@ -35,6 +48,12 @@ def main():
 
         app = QApplication([])
         pet = mascote.Pet(Pointer())
+        assert not pet.tray.icon().isNull(), 'Missing system tray icon'
+        mascote.AUTOSTART = root / 'startup' / 'clips.bat'
+        pet.toggle_start(True)
+        assert mascote.AUTOSTART.read_text(encoding='utf-8') == mascote.STARTUP_TEXT
+        pet.toggle_start(False)
+        assert not mascote.AUTOSTART.exists()
         pet.timer.stop()
         pet.show()
         app.processEvents()
@@ -53,8 +72,9 @@ def main():
         pet.close()
         if len(sys.argv) > 1:
             binary = str(Path(sys.argv[1]).resolve())
-            version = subprocess.check_output([binary, '--version'], text=True, timeout=30)
-            assert version.strip() == f'Clips — Mascote do PC {mascote.VERSION}'
+            if not mascote.IS_WINDOWS:
+                version = subprocess.check_output([binary, '--version'], text=True, timeout=30)
+                assert version.strip() == f'Clips — Mascote do PC {mascote.VERSION}'
             settings = QSettings('MascoteDoPC', 'Mascotes')
             settings.setValue('bichinho', 'mixi')
             settings.setValue('mixi_split_v1', True)
@@ -68,7 +88,7 @@ def main():
                 assert not image.isNull(), 'Packaged app did not render a preview'
                 assert (image.width(), image.height()) == (180, 240)
         print('OK: 8 mascots, 48 poses, 10 bundled assets' +
-              (', standalone version and mirrored Mixi previews' if len(sys.argv) > 1 else ''))
+              (', standalone mirrored Mixi previews' if len(sys.argv) > 1 else ''))
 
 
 if __name__ == '__main__':
